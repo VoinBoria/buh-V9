@@ -39,6 +39,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import kotlinx.coroutines.launch
 
@@ -53,138 +54,92 @@ fun IncomeExpenseChart(
 ) {
     BoxWithConstraints {
         val screenWidth = maxWidth
-        val chartSize = if (screenWidth < 360.dp) 120.dp else 160.dp  // Зменшення розміру діаграми
-        val strokeWidth = if (screenWidth < 360.dp) 30f else 50f  // Зменшення товщини обводки
+        val isSmallScreen = screenWidth < 360.dp
+        val chartSize = if (isSmallScreen) 100.dp else 180.dp  // Зменшення розміру діаграми для маленьких екранів
+        val strokeWidth = if (isSmallScreen) 16f else 50f  // Зменшення товщини обводки для маленьких екранів
         val maxLegendHeight = chartSize  // Висота легенди тепер дорівнює висоті діаграми
+        val padding = if (isSmallScreen) 8.dp else 16.dp  // Зменшення відступів для маленьких екранів
 
         val scope = rememberCoroutineScope()
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier.fillMaxWidth().then(
+                if (!isSmallScreen) Modifier.widthIn(max = 600.dp) else Modifier
+            )
         ) {
             val incomeColors = generateDistinctColors(incomes.size.takeIf { it > 0 } ?: 1, excludeRed = true)
             val expenseColors = generateDistinctColors(expenses.size.takeIf { it > 0 } ?: 1, excludeGreen = true)
             val pagerState = rememberPagerState()
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                    .border(1.dp, Color.Gray, RoundedCornerShape(10.dp))
-                    .padding(16.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Center
                 ) {
+                    TextButton(
+                        onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                        colors = ButtonDefaults.textButtonColors(
+                            containerColor = if (pagerState.currentPage == 0) Color.Gray else Color.Transparent
+                        )
+                    ) {
+                        Text("Доходи", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                        colors = ButtonDefaults.textButtonColors(
+                            containerColor = if (pagerState.currentPage == 1) Color.Gray else Color.Transparent
+                        )
+                    ) {
+                        Text("Витрати", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    }
+                }
+
+                HorizontalPager(state = pagerState, count = 2, modifier = Modifier.fillMaxWidth()) { page ->
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        TextButton(
-                            onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
-                            colors = ButtonDefaults.textButtonColors(
-                                containerColor = if (pagerState.currentPage == 0) Color.Gray else Color.Transparent
+                        if (page == 0) {
+                            LegendColumn(
+                                items = incomes.keys.toList(),
+                                colors = incomeColors,
+                                maxHeight = maxLegendHeight,
+                                modifier = Modifier.padding(end = padding) // Зміщення вправо
                             )
-                        ) {
-                            Text("Доходи", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TextButton(
-                            onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
-                            colors = ButtonDefaults.textButtonColors(
-                                containerColor = if (pagerState.currentPage == 1) Color.Gray else Color.Transparent
+                            GradientDonutChart(
+                                values = incomes.values.toList(),
+                                maxAmount = totalIncomes,
+                                chartSize = chartSize,
+                                colors = incomeColors,
+                                strokeWidth = strokeWidth,
+                                emptyChartColor = Color(0x8032CD32).copy(alpha = 0.5f),
+                                modifier = Modifier.padding(start = padding) // Зміщення вліво
                             )
-                        ) {
-                            Text("Витрати", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        }
-                    }
-
-                    HorizontalPager(state = pagerState, count = 2, modifier = Modifier.fillMaxWidth()) { page ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .heightIn(max = maxLegendHeight)
-                                    .verticalScroll(rememberScrollState()),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                if (page == 0) {
-                                    incomes.keys.forEachIndexed { index, category ->
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(vertical = 4.dp)  // Додавання відступів
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(12.dp)
-                                                    .background(
-                                                        color = incomeColors[index],
-                                                        shape = CircleShape
-                                                    )
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = category,
-                                                color = Color.White,
-                                                fontSize = if (screenWidth < 360.dp) 12.sp else 14.sp  // Збільшення шрифту
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    expenses.keys.forEachIndexed { index, category ->
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(vertical = 4.dp)  // Додавання відступів
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(12.dp)
-                                                    .background(
-                                                        color = expenseColors[index],
-                                                        shape = CircleShape
-                                                    )
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = category,
-                                                color = Color.White,
-                                                fontSize = if (screenWidth < 360.dp) 12.sp else 14.sp  // Збільшення шрифту
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(16.dp))
-
-                            if (page == 0) {
-                                GradientDonutChart(
-                                    values = incomes.values.toList(),
-                                    maxAmount = totalIncomes,
-                                    chartSize = chartSize,
-                                    colors = incomeColors,
-                                    strokeWidth = strokeWidth,
-                                    emptyChartColor = Color(0x8032CD32).copy(alpha = 0.5f)
-                                )
-                            } else {
-                                GradientDonutChart(
-                                    values = expenses.values.toList(),
-                                    maxAmount = totalExpenses,
-                                    chartSize = chartSize,
-                                    colors = expenseColors,
-                                    strokeWidth = strokeWidth,
-                                    emptyChartColor = Color(0x80B22222).copy(alpha = 0.5f)
-                                )
-                            }
+                        } else {
+                            LegendColumn(
+                                items = expenses.keys.toList(),
+                                colors = expenseColors,
+                                maxHeight = maxLegendHeight,
+                                modifier = Modifier.padding(end = padding) // Зміщення вправо
+                            )
+                            GradientDonutChart(
+                                values = expenses.values.toList(),
+                                maxAmount = totalExpenses,
+                                chartSize = chartSize,
+                                colors = expenseColors,
+                                strokeWidth = strokeWidth,
+                                emptyChartColor = Color(0x80B22222).copy(alpha = 0.5f),
+                                modifier = Modifier.padding(start = padding) // Зміщення вліво
+                            )
                         }
                     }
                 }
@@ -203,16 +158,57 @@ fun IncomeExpenseChart(
 }
 
 @Composable
+fun LegendColumn(
+    items: List<String>,
+    colors: List<Color>,
+    maxHeight: Dp,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .height(maxHeight)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.Start
+    ) {
+        items.forEachIndexed { index, category ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 4.dp)  // Додавання відступів
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(
+                            color = colors[index],
+                            shape = CircleShape
+                        )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = category,
+                    color = Color.White,
+                    fontSize = 14.sp,  // Збільшення шрифту
+                    maxLines = 2, // Забезпечує, що текст не обрізається по слову
+                    overflow = TextOverflow.Ellipsis // Додаємо трикрапку в кінці довгих слів
+                )
+            }
+        }
+        Box(modifier = Modifier.height(16.dp)) // Додаємо відступ знизу, щоб уникнути обрізання кольорової крапки
+    }
+}
+
+@Composable
 fun GradientDonutChart(
     values: List<Double>,
     maxAmount: Double,
     chartSize: Dp,
     colors: List<Color>,
     strokeWidth: Float,
-    emptyChartColor: Color
+    emptyChartColor: Color,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(chartSize)
             .padding(16.dp)
     ) {
@@ -229,13 +225,6 @@ fun GradientDonutChart(
                     useCenter = false,
                     style = Stroke(strokeWidth)
                 )
-                drawArc(
-                    color = Color.Black.copy(alpha = 0.1f),
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngles[i],
-                    useCenter = false,
-                    style = Stroke(strokeWidth + 4)
-                )
                 startAngle += sweepAngles[i]
             }
             if (values.isEmpty()) {
@@ -250,7 +239,6 @@ fun GradientDonutChart(
         }
     }
 }
-
 fun generateDistinctColors(count: Int, excludeRed: Boolean = false, excludeGreen: Boolean = false): List<Color> {
     val predefinedColors = listOf(
         Color(0xFFe6194B), // red
