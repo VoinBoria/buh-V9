@@ -74,8 +74,9 @@ class TaskActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     viewModel.loadTasks() // Завантаження задач
                     if (viewModel.hasOverdueTasks()) { // Перевірка прострочених задач
+                        delay(500) // Затримка перед показом повідомлення
                         showOverdueMessage = true
-                        delay(3000)
+                        delay(3000) // Затримка на 3 секунди
                         showOverdueMessage = false
                     }
                 }
@@ -113,7 +114,6 @@ class TaskActivity : ComponentActivity() {
                                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121212))
                             )
                         },
-
                         content = { innerPadding ->
                             Box(
                                 modifier = Modifier
@@ -133,7 +133,7 @@ class TaskActivity : ComponentActivity() {
                                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                                     modifier = Modifier
                                         .align(Alignment.BottomCenter)
-                                        .padding(bottom = 72.dp)
+                                        .padding(bottom = 100.dp) // збільшено значення відступу
                                 ) {
                                     Box(
                                         modifier = Modifier
