@@ -9,6 +9,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +42,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.serhio.homeaccountingapp.ui.theme.HomeAccountingAppTheme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
@@ -44,6 +50,7 @@ import kotlinx.coroutines.launch
 class TaskActivity : ComponentActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private val gson = Gson()
+
     private fun <T> navigateToActivity(activityClass: Class<T>) {
         val intent = Intent(this, activityClass)
         startActivity(intent)
@@ -62,6 +69,16 @@ class TaskActivity : ComponentActivity() {
             HomeAccountingAppTheme {
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                var showOverdueMessage by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    viewModel.loadTasks() // Завантаження задач
+                    if (viewModel.hasOverdueTasks()) { // Перевірка прострочених задач
+                        showOverdueMessage = true
+                        delay(3000)
+                        showOverdueMessage = false
+                    }
+                }
 
                 ModalNavigationDrawer(
                     drawerState = drawerState,
@@ -96,6 +113,7 @@ class TaskActivity : ComponentActivity() {
                                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF121212))
                             )
                         },
+
                         content = { innerPadding ->
                             Box(
                                 modifier = Modifier
@@ -106,9 +124,30 @@ class TaskActivity : ComponentActivity() {
                                     )
                                     .padding(innerPadding)
                             ) {
-                                // Завантажуємо задачі з SharedPreferences
-                                viewModel.loadTasks()
                                 TaskScreen(viewModel)
+
+                                // Анімоване повідомлення про прострочені завдання
+                                AnimatedVisibility(
+                                    visible = showOverdueMessage,
+                                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(bottom = 72.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(Color.Yellow.copy(alpha = 0.8f), Color.Transparent)
+                                                )
+                                            )
+                                            .padding(16.dp)
+                                    ) {
+                                        Text("У вас є невиконане завдання", color = Color.Black)
+                                    }
+                                }
                             }
                         }
                     )
@@ -116,8 +155,8 @@ class TaskActivity : ComponentActivity() {
             }
         }
     }
-}
 
+}
 data class Task(
     val id: String,
     val title: String,
@@ -168,6 +207,12 @@ class TaskViewModel(
         editor.putString("tasks", tasksJson)
         editor.apply()
     }
+
+    // Перевірка наявності прострочених завдань
+    fun hasOverdueTasks(): Boolean {
+        val currentDate = Date()
+        return _tasks.any { !it.isCompleted && it.endDate.before(currentDate) }
+    }
 }
 
 class TaskViewModelFactory(
@@ -182,7 +227,6 @@ class TaskViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(viewModel: TaskViewModel) {
@@ -193,7 +237,8 @@ fun TaskScreen(viewModel: TaskViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddTaskDialog = true },
-                containerColor = Color(0xFF228B22)
+                containerColor = Color(0xFF228B22),
+
             ) {
                 Text("+", color = Color.White, style = MaterialTheme.typography.bodyLarge)
             }
@@ -232,7 +277,6 @@ fun TaskScreen(viewModel: TaskViewModel) {
         }
     )
 }
-
 @Composable
 fun TaskList(
     tasks: List<Task>,
