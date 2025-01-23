@@ -9,7 +9,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -423,23 +426,31 @@ fun AddTaskDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Green.copy(alpha = 0.6f) // Зелений з прозорістю
+                    containerColor = Color.Transparent, // Прибираємо заливку
                 )
             ) {
-                Text("Зберегти", color = Color.White)
+                Text("Зберегти", color = Color.Green) // Колір шрифту зелений
             }
         },
         dismissButton = {
             Button(
                 onClick = { onDismiss() },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red.copy(alpha = 0.6f) // Червоний з прозорістю
+                    containerColor = Color.Transparent, // Прибираємо заливку
                 )
             ) {
-                Text("Відмінити", color = Color.White)
+                Text("Відмінити", color = Color.Red) // Колір шрифту червоний
             }
         },
-        containerColor = Color.Black.copy(alpha = 0.8f), // Чорний і прозорий фон
+        modifier = Modifier
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color.Gray.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.8f))
+                ),
+                shape = MaterialTheme.shapes.medium
+            )
+            .border(BorderStroke(1.dp, Color.White)),
+        containerColor = Color.Transparent,
         textContentColor = Color.White
     )
 }
