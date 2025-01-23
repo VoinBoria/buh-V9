@@ -1,5 +1,7 @@
 package com.serhio.homeaccountingapp;
 
+import android.R.id.list
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -46,6 +48,8 @@ import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -361,6 +365,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         loadStandardCategories()
     }
 }
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -463,91 +468,205 @@ fun MainScreen(
                         )
                         .padding(innerPadding)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .widthIn(max = 600.dp),  // Обмеження ширини контейнера
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Box(
+                    BoxWithConstraints {
+                        val isWideScreen = maxWidth > 600.dp
+
+                        if (isWideScreen) {
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 16.dp, vertical = 32.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                ExpandableButtonWithAmount(
-                                    text = "Доходи: ",
-                                    amount = totalIncomes,
-                                    gradientColors = listOf(
-                                        Color.Transparent,
-                                        Color.Transparent
-                                    ),
-                                    isExpanded = showIncomes,
-                                    onClick = { showIncomes = !showIncomes },
-                                    textColor = Color(0xFF00FF00), // Яскравий зелений колір тексту
-                                    fontWeight = FontWeight.Bold,  // Жирний шрифт
-                                    fontSize = 18.sp // Збільшення шрифту
-                                )
-                            }
+                                Column(
+                                    modifier = Modifier
+                                        .widthIn(max = 400.dp),  // Обмеження ширини контейнера
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .widthIn(max = 400.dp) // Обмеження ширини кнопки
+                                            .padding(vertical = 8.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                            .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    ) {
+                                        ExpandableButtonWithAmount(
+                                            text = "Доходи: ",
+                                            amount = totalIncomes,
+                                            gradientColors = listOf(
+                                                Color.Transparent,
+                                                Color.Transparent
+                                            ),
+                                            isExpanded = showIncomes,
+                                            onClick = { showIncomes = !showIncomes },
+                                            textColor = Color(0xFF00FF00), // Яскравий зелений колір тексту
+                                            fontWeight = FontWeight.Bold,  // Жирний шрифт
+                                            fontSize = 18.sp // Збільшення шрифту
+                                        )
+                                    }
 
-                            if (showIncomes) {
-                                IncomeList(incomes = incomes, onCategoryClick = onIncomeCategoryClick)
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
+                                    if (showIncomes) {
+                                        Column(
+                                            modifier = Modifier
+                                                .heightIn(max = 200.dp) // Обмеження висоти списку
+                                                .verticalScroll(rememberScrollState())
+                                        ) {
+                                            IncomeList(incomes = incomes, onCategoryClick = onIncomeCategoryClick)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                            Box(
+                                    Box(
+                                        modifier = Modifier
+                                            .widthIn(max = 400.dp) // Обмеження ширини кнопки
+                                            .padding(vertical = 8.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                            .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    ) {
+                                        ExpandableButtonWithAmount(
+                                            text = "Витрати: ",
+                                            amount = totalExpenses,
+                                            gradientColors = listOf(
+                                                Color.Transparent,
+                                                Color.Transparent
+                                            ),
+                                            isExpanded = showExpenses,
+                                            onClick = { showExpenses = !showExpenses },
+                                            textColor = Color(0xFFFF0000), // Яскравий червоний колір тексту
+                                            fontWeight = FontWeight.Bold,  // Жирний шрифт
+                                            fontSize = 18.sp // Збільшення шрифту
+                                        )
+                                    }
+
+                                    if (showExpenses) {
+                                        Column(
+                                            modifier = Modifier
+                                                .heightIn(max = 200.dp) // Обмеження висоти списку
+                                                .verticalScroll(rememberScrollState())
+                                        ) {
+                                            ExpensesList(expenses = expenses, onCategoryClick = onExpenseCategoryClick)
+                                        }
+                                    }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .widthIn(max = 400.dp) // Обмеження ширини контейнера для діаграм
+                                        .padding(vertical = 8.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                        .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                ) {
+                                    IncomeExpenseChart(
+                                        incomes = incomes,
+                                        expenses = expenses,
+                                        totalIncomes = totalIncomes,
+                                        totalExpenses = totalExpenses
+                                    )
+                                }
+                            }
+                        } else {
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp, vertical = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween
                             ) {
-                                ExpandableButtonWithAmount(
-                                    text = "Витрати: ",
-                                    amount = totalExpenses,
-                                    gradientColors = listOf(
-                                        Color.Transparent,
-                                        Color.Transparent
-                                    ),
-                                    isExpanded = showExpenses,
-                                    onClick = { showExpenses = !showExpenses },
-                                    textColor = Color(0xFFFF0000), // Яскравий червоний колір тексту
-                                    fontWeight = FontWeight.Bold,  // Жирний шрифт
-                                    fontSize = 18.sp // Збільшення шрифту
-                                )
-                            }
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .widthIn(max = 600.dp),  // Обмеження ширини контейнера
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .widthIn(max = 400.dp) // Обмеження ширини кнопки
+                                            .padding(vertical = 8.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                            .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    ) {
+                                        ExpandableButtonWithAmount(
+                                            text = "Доходи: ",
+                                            amount = totalIncomes,
+                                            gradientColors = listOf(
+                                                Color.Transparent,
+                                                Color.Transparent
+                                            ),
+                                            isExpanded = showIncomes,
+                                            onClick = { showIncomes = !showIncomes },
+                                            textColor = Color(0xFF00FF00), // Яскравий зелений колір тексту
+                                            fontWeight = FontWeight.Bold,  // Жирний шрифт
+                                            fontSize = 18.sp // Збільшення шрифту
+                                        )
+                                    }
 
-                            if (showExpenses) {
-                                ExpensesList(expenses = expenses, onCategoryClick = onExpenseCategoryClick)
-                            }
+                                    if (showIncomes) {
+                                        Column(
+                                            modifier = Modifier
+                                                .heightIn(max = 200.dp) // Обмеження висоти списку
+                                                .verticalScroll(rememberScrollState())
+                                        ) {
+                                            IncomeList(incomes = incomes, onCategoryClick = onIncomeCategoryClick)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
 
-                            Spacer(modifier = Modifier.height(32.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .widthIn(max = 400.dp) // Обмеження ширини кнопки
+                                            .padding(vertical = 8.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                            .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    ) {
+                                        ExpandableButtonWithAmount(
+                                            text = "Витрати: ",
+                                            amount = totalExpenses,
+                                            gradientColors = listOf(
+                                                Color.Transparent,
+                                                Color.Transparent
+                                            ),
+                                            isExpanded = showExpenses,
+                                            onClick = { showExpenses = !showExpenses },
+                                            textColor = Color(0xFFFF0000), // Яскравий червоний колір тексту
+                                            fontWeight = FontWeight.Bold,  // Жирний шрифт
+                                            fontSize = 18.sp // Збільшення шрифту
+                                        )
+                                    }
 
-                            // Діаграми доходів та витрат
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
-                            ) {
-                                IncomeExpenseChart(
-                                    incomes = incomes,
-                                    expenses = expenses,
-                                    totalIncomes = totalIncomes,
-                                    totalExpenses = totalExpenses
-                                )
+                                    if (showExpenses) {
+                                        Column(
+                                            modifier = Modifier
+                                                .heightIn(max = 200.dp) // Обмеження висоти списку
+                                                .verticalScroll(rememberScrollState())
+                                        ) {
+                                            ExpensesList(expenses = expenses, onCategoryClick = onExpenseCategoryClick)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(32.dp))
+
+                                    // Діаграми доходів та витрат
+                                    Box(
+                                        modifier = Modifier
+                                            .widthIn(max = 400.dp) // Обмеження ширини контейнера для діаграм
+                                            .padding(vertical = 8.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                            .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    ) {
+                                        IncomeExpenseChart(
+                                            incomes = incomes,
+                                            expenses = expenses,
+                                            totalIncomes = totalIncomes,
+                                            totalExpenses = totalExpenses
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -624,6 +743,7 @@ fun MainScreen(
                             )
                         }
                     }
+
 
                     Row(
                         modifier = Modifier
