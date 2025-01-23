@@ -390,7 +390,16 @@ fun AddOrEditLoanTransactionDialog(
                 onClick = {
                     val amountValue = amount.toDoubleOrNull()
                     if (amountValue != null) {
-                        onSave(LoanTransaction(amountValue, borrowerName, issueDate, dueDate, comment))
+                        onSave(
+                            LoanTransaction(
+                                amount = amountValue,
+                                borrowerName = borrowerName,
+                                issueDate = issueDate,
+                                dueDate = dueDate,
+                                comment = comment,
+                                id = transactionToEdit?.id ?: UUID.randomUUID()
+                            )
+                        )
                         onDismiss()
                     }
                 },
@@ -420,7 +429,7 @@ fun LoanDatePickerDialog(onDateSelected: (String) -> Unit) {
     val datePickerDialog = DatePickerDialog(
         context,
         { _, selectedYear, selectedMonth, selectedDay ->
-            val formattedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
+            val formattedDate = "${selectedYear}-${selectedMonth + 1}-${selectedDay}"
             onDateSelected(formattedDate)
         },
         year, month, day
