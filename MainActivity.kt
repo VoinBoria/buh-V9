@@ -471,16 +471,18 @@ fun MainScreen(
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = 600.dp),  // Обмеження ширини контейнера
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.9f) // Зменшення ширини фону
+                                    .fillMaxWidth()
                                     .padding(vertical = 8.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                                    .border(1.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
                             ) {
                                 ExpandableButtonWithAmount(
                                     text = "Доходи: ",
@@ -504,11 +506,11 @@ fun MainScreen(
 
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.9f) // Зменшення ширини фону
+                                    .fillMaxWidth()
                                     .padding(vertical = 8.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                                    .border(1.dp, Color.Gray, RoundedCornerShape(10.dp))
+                                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
                             ) {
                                 ExpandableButtonWithAmount(
                                     text = "Витрати: ",
@@ -532,12 +534,21 @@ fun MainScreen(
                             Spacer(modifier = Modifier.height(32.dp))
 
                             // Діаграми доходів та витрат
-                            IncomeExpenseChart(
-                                incomes = incomes,
-                                expenses = expenses,
-                                totalIncomes = totalIncomes,
-                                totalExpenses = totalExpenses
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                    .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
+                            ) {
+                                IncomeExpenseChart(
+                                    incomes = incomes,
+                                    expenses = expenses,
+                                    totalIncomes = totalIncomes,
+                                    totalExpenses = totalExpenses
+                                )
+                            }
                         }
                     }
 
@@ -630,7 +641,7 @@ fun MainScreen(
 
                         FloatingActionButton(
                             onClick = { showAddExpenseTransactionDialog = true },
-                            containerColor = Color(0xFF2F2F2F) // Зробити ще темніший сірий колір
+                            containerColor = Color(0xFFe6194B) // Зробити ще темніший сірий колір
                         ) {
                             Text("+", color = Color.White, style = MaterialTheme.typography.bodyLarge) // Плюсик всередині білий
                         }
