@@ -65,9 +65,9 @@ fun IncomeExpenseChart(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
-            modifier = Modifier.fillMaxWidth().then(
-                if (!isSmallScreen) Modifier.widthIn(max = 600.dp) else Modifier
-            )
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (!isSmallScreen) Modifier.widthIn(max = 400.dp) else Modifier) // Обмеження ширини контейнера
         ) {
             val incomeColors = generateDistinctColors(incomes.size.takeIf { it > 0 } ?: 1, excludeRed = true)
             val expenseColors = generateDistinctColors(expenses.size.takeIf { it > 0 } ?: 1, excludeGreen = true)
@@ -156,7 +156,6 @@ fun IncomeExpenseChart(
         }
     }
 }
-
 @Composable
 fun LegendColumn(
     items: List<String>,
@@ -294,11 +293,13 @@ fun ExpandableButtonWithAmount(
         )
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.95f) // Зменшення ширини фону
+                .fillMaxWidth()
+                .widthIn(max = 400.dp) // Обмежуємо максимальну ширину кнопки
                 .padding(vertical = 8.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(gradient)
                 .clickable(onClick = onClick)
+                .padding(horizontal = padding) // Додаємо відступи з боків
         ) {
             Row(
                 modifier = Modifier
