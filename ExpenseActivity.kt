@@ -834,6 +834,7 @@ fun AddCategoryDialog(
         containerColor = Color(0xFF2B2B2B)
     )
 }
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionDialog(
     categories: List<String>,
@@ -880,7 +881,9 @@ fun AddTransactionDialog(
                 .padding(16.dp)
                 .border(2.dp, Color.White, RoundedCornerShape(8.dp)) // Додаємо білу рамку
                 .background(
-                    color = Color.DarkGray, // Темно-сірий фон для діалогу
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.Gray.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.8f))
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 )
                 .widthIn(max = 300.dp) // Зробити меню вужчим
@@ -891,7 +894,7 @@ fun AddTransactionDialog(
                 text = "Додати витрату",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.Red // Білий заголовок для кращого контрасту
+                    color = Color.White // Білий заголовок для кращого контрасту
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -904,7 +907,7 @@ fun AddTransactionDialog(
                         amount = newValue
                     }
                 },
-                label = { Text("Сума", color = Color.Gray) },
+                label = { Text("Сума", color = Color.White) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
@@ -915,14 +918,11 @@ fun AddTransactionDialog(
                     cursorColor = Color.White,
                     focusedLabelColor = Color.White,
                     unfocusedLabelColor = Color.Gray,
-                    containerColor = Color.DarkGray, // Темно-сірий фон для поля вводу
+                    containerColor = Color.Transparent, // Прозорий фон для поля вводу
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
                 ),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White, fontWeight = FontWeight.Bold), // Білий і жирний текст
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Decimal
-                )
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White, fontWeight = FontWeight.Bold) // Білий і жирний текст
             )
             Button(
                 onClick = { showDatePicker = true },
@@ -960,7 +960,7 @@ fun AddTransactionDialog(
                         unfocusedLabelColor = Color.Gray,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        containerColor = Color.DarkGray // Темно-сірий фон для поля вводу
+                        containerColor = Color.Transparent // Прозорий фон для поля вводу
                     ),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White, fontWeight = FontWeight.Bold)
                 )
@@ -1015,7 +1015,7 @@ fun AddTransactionDialog(
                     cursorColor = Color.White,
                     focusedLabelColor = Color.White,
                     unfocusedLabelColor = Color.Gray,
-                    containerColor = Color.DarkGray // Темно-сірий фон для поля вводу
+                    containerColor = Color.Transparent // Прозорий фон для поля вводу
                 ),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White, fontWeight = FontWeight.Bold) // Білий і жирний текст
             )
@@ -1028,7 +1028,7 @@ fun AddTransactionDialog(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Скасувати", color = Color.White, fontWeight = FontWeight.Bold) // Білий жирний текст
+                    Text("Скасувати", color = Color.Red, fontWeight = FontWeight.Bold) // Червоний жирний текст
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
@@ -1044,7 +1044,7 @@ fun AddTransactionDialog(
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Зберегти", color = Color.White, fontWeight = FontWeight.Bold) // Білий жирний текст
+                    Text("Зберегти", color = Color.Green, fontWeight = FontWeight.Bold) // Зелений жирний текст
                 }
             }
         }
