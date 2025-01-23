@@ -55,7 +55,7 @@ fun IncomeExpenseChart(
     BoxWithConstraints {
         val screenWidth = maxWidth
         val isSmallScreen = screenWidth < 360.dp
-        val chartSize = if (isSmallScreen) 100.dp else 180.dp  // Зменшення розміру діаграми для маленьких екранів
+        val chartSize = if (isSmallScreen) 100.dp else 178.dp  // Зменшення розміру діаграми для маленьких екранів
         val strokeWidth = if (isSmallScreen) 16f else 50f  // Зменшення товщини обводки для маленьких екранів
         val maxLegendHeight = chartSize  // Висота легенди тепер дорівнює висоті діаграми
         val padding = if (isSmallScreen) 8.dp else 16.dp  // Зменшення відступів для маленьких екранів
@@ -196,7 +196,6 @@ fun LegendColumn(
         Box(modifier = Modifier.height(16.dp)) // Додаємо відступ знизу, щоб уникнути обрізання кольорової крапки
     }
 }
-
 @Composable
 fun GradientDonutChart(
     values: List<Double>,
@@ -205,7 +204,8 @@ fun GradientDonutChart(
     colors: List<Color>,
     strokeWidth: Float,
     emptyChartColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    gapSize: Float = 2f // Додаємо параметр для розділення між сегментами
 ) {
     Box(
         modifier = modifier
@@ -220,8 +220,8 @@ fun GradientDonutChart(
             for (i in values.indices) {
                 drawArc(
                     color = colors[i],
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngles[i],
+                    startAngle = startAngle + gapSize / 2, // Додаємо відступ на початку сегменту
+                    sweepAngle = sweepAngles[i] - gapSize, // Віднімаємо відступ з ширини сегменту
                     useCenter = false,
                     style = Stroke(strokeWidth)
                 )
