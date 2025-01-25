@@ -52,6 +52,9 @@ fun IncomeExpenseChart(
     totalIncomes: Double,
     totalExpenses: Double
 ) {
+    val emptyChartColor = Color(0x8032CD32).copy(alpha = 0.5f)
+    val separatorColor = Color.DarkGray // Темніший колір розділової лінії
+
     BoxWithConstraints {
         val screenWidth = maxWidth
         val isSmallScreen = screenWidth < 360.dp
@@ -71,6 +74,7 @@ fun IncomeExpenseChart(
         ) {
             val incomeColors = generateDistinctColors(incomes.size.takeIf { it > 0 } ?: 1, excludeRed = true)
             val expenseColors = generateDistinctColors(expenses.size.takeIf { it > 0 } ?: 1, excludeGreen = true)
+
             val pagerState = rememberPagerState()
 
             Column(
@@ -121,7 +125,8 @@ fun IncomeExpenseChart(
                                 chartSize = chartSize,
                                 colors = incomeColors,
                                 strokeWidth = strokeWidth,
-                                emptyChartColor = Color(0x8032CD32).copy(alpha = 0.5f),
+                                emptyChartColor = emptyChartColor,
+                                separatorColor = separatorColor, // Передаємо темний колір розділової лінії
                                 modifier = Modifier.padding(start = padding) // Зміщення вліво
                             )
                         } else {
@@ -137,7 +142,8 @@ fun IncomeExpenseChart(
                                 chartSize = chartSize,
                                 colors = expenseColors,
                                 strokeWidth = strokeWidth,
-                                emptyChartColor = Color(0x80B22222).copy(alpha = 0.5f),
+                                emptyChartColor = emptyChartColor,
+                                separatorColor = separatorColor, // Передаємо темний колір розділової лінії
                                 modifier = Modifier.padding(start = padding) // Зміщення вліво
                             )
                         }
@@ -203,8 +209,9 @@ fun GradientDonutChart(
     colors: List<Color>,
     strokeWidth: Float,
     emptyChartColor: Color,
+    separatorColor: Color = Color.DarkGray, // Темніший колір для розділової лінії
     modifier: Modifier = Modifier,
-    gapSize: Float = 2f // Додаємо параметр для розділення між сегментами
+    gapSize: Float = 2f // Розмір розділової лінії
 ) {
     Box(
         modifier = modifier
@@ -217,10 +224,19 @@ fun GradientDonutChart(
             }
             var startAngle = -90f
             for (i in values.indices) {
+                // Розділова лінія
+                drawArc(
+                    color = separatorColor,
+                    startAngle = startAngle,
+                    sweepAngle = gapSize,
+                    useCenter = false,
+                    style = Stroke(strokeWidth)
+                )
+                // Сегмент
                 drawArc(
                     color = colors[i],
-                    startAngle = startAngle + gapSize / 2, // Додаємо відступ на початку сегменту
-                    sweepAngle = sweepAngles[i] - gapSize, // Віднімаємо відступ з ширини сегменту
+                    startAngle = startAngle + gapSize,
+                    sweepAngle = sweepAngles[i] - gapSize,
                     useCenter = false,
                     style = Stroke(strokeWidth)
                 )
@@ -238,6 +254,8 @@ fun GradientDonutChart(
         }
     }
 }
+
+
 fun generateDistinctColors(count: Int, excludeRed: Boolean = false, excludeGreen: Boolean = false): List<Color> {
     val predefinedColors = listOf(
         Color(0xFFe6194B), // red
