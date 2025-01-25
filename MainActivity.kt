@@ -556,7 +556,7 @@ fun MainScreen(
                                         .widthIn(max = 400.dp) // Обмеження ширини контейнера для діаграм
                                         .padding(vertical = 8.dp)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                                        .background(Color.Transparent, RoundedCornerShape(10.dp)) // Прозорий фон
                                         .border(2.dp, Color.Gray, RoundedCornerShape(10.dp))
                                 ) {
                                     IncomeExpenseChart(
