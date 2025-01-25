@@ -185,7 +185,7 @@ class IncomeActivity : ComponentActivity() {
 
     private fun sendUpdateBroadcast() {
         val updateIntent = Intent("com.example.homeaccountingapp.UPDATE_INCOME")
-        LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent)
+        LocalBroadcastManager.getInstance(getApplication()).sendBroadcast(updateIntent)
     }
 
     private fun loadIncomesFromSharedPreferences() {
@@ -249,7 +249,7 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
             IncomeTransactions = currentTransactions
             saveTransactionsToPreferences(currentTransactions)
             sortTransactions(sortType)
-            sendUpdateBroadcast?.invoke()
+            sendUpdateBroadcast?.invoke() // Використання ?.invoke() для безпечного виклику
         }
     }
 
@@ -263,7 +263,7 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
             IncomeTransactions = currentTransactions
             saveTransactionsToPreferences(currentTransactions)
             sortTransactions(sortType)
-            sendUpdateBroadcast?.invoke()
+            sendUpdateBroadcast?.invoke() // Використання ?.invoke() для безпечного виклику
         }
     }
 
