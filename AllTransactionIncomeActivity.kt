@@ -114,7 +114,11 @@ class AllTransactionIncomeActivity : ComponentActivity() {
                                     )
                                     .padding(innerPadding)
                             ) {
-                                AllTransactionIncomeScreen(viewModel)
+                                AllTransactionIncomeScreen(
+                                    viewModel = viewModel,
+                                    onDeleteTransaction = { transaction -> deleteTransaction(transaction) },
+                                    onUpdateTransaction = { transaction -> updateTransaction(transaction) }
+                                )
                                 PeriodButton(viewModel, Modifier.align(Alignment.BottomStart).padding(16.dp))
                             }
                         }
@@ -123,7 +127,6 @@ class AllTransactionIncomeActivity : ComponentActivity() {
             }
         }
 
-        // Ініціалізація BroadcastReceiver для оновлення даних
         updateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == "com.example.homeaccountingapp.UPDATE_INCOME") {
@@ -138,6 +141,21 @@ class AllTransactionIncomeActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(updateReceiver)
+    }
+
+    private fun sendUpdateBroadcast() {
+        val updateIntent = Intent("com.example.homeaccountingapp.UPDATE_INCOME")
+        LocalBroadcastManager.getInstance(this).sendBroadcast(updateIntent)
+    }
+
+    private fun deleteTransaction(transaction: IncomeTransaction) {
+        viewModel.deleteTransaction(transaction)
+        sendUpdateBroadcast() // Відправка повідомлення про оновлення
+    }
+
+    private fun updateTransaction(updatedTransaction: IncomeTransaction) {
+        viewModel.updateTransaction(updatedTransaction)
+        sendUpdateBroadcast() // Відправка повідомлення про оновлення
     }
 }
 @RequiresApi(Build.VERSION_CODES.O)
@@ -233,7 +251,6 @@ fun showDatePickerDialog(context: Context, initialDate: LocalDate, onDateSelecte
         calendar.get(Calendar.DAY_OF_MONTH)
     ).show()
 }
-
 @Composable
 fun SortMenu(viewModel: IncomeViewModel) {
     var expanded by remember { mutableStateOf(false) }
@@ -275,7 +292,9 @@ fun SortMenu(viewModel: IncomeViewModel) {
 @Composable
 fun AllTransactionIncomeScreen(
     viewModel: IncomeViewModel = viewModel(),
-    modifier: Modifier = Modifier // Додаємо параметр modifier
+    modifier: Modifier = Modifier,
+    onDeleteTransaction: (IncomeTransaction) -> Unit,
+    onUpdateTransaction: (IncomeTransaction) -> Unit
 ) {
     var selectedTransaction by remember { mutableStateOf<IncomeTransaction?>(null) }
     var showMenuDialog by remember { mutableStateOf(false) }
@@ -367,7 +386,7 @@ fun AllTransactionIncomeScreen(
                         showEditDialog = true
                     },
                     onDelete = {
-                        viewModel.deleteTransaction(selectedTransaction!!)
+                        onDeleteTransaction(selectedTransaction!!) // Виклик onDeleteTransaction
                         showMenuDialog = false
                     }
                 )
@@ -377,7 +396,7 @@ fun AllTransactionIncomeScreen(
                     transaction = selectedTransaction!!,
                     onDismiss = { showEditDialog = false },
                     onSave = { updatedTransaction ->
-                        viewModel.updateTransaction(updatedTransaction)
+                        onUpdateTransaction(updatedTransaction) // Виклик onUpdateTransaction
                         showEditDialog = false
                     }
                 )
@@ -385,7 +404,6 @@ fun AllTransactionIncomeScreen(
         }
     }
 }
-
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun AllIncomeTransactionItem(
