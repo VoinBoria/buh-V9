@@ -9,6 +9,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,11 +48,13 @@ import androidx.lifecycle.ViewModelProvider
 import com.serhio.homeaccountingapp.ui.theme.HomeAccountingAppTheme
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import java.util.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
 class BorrowedActivity : ComponentActivity() {
     private val borrowedViewModel: BorrowedViewModel by viewModels { BorrowedViewModelFactory(application) }
@@ -63,6 +70,17 @@ class BorrowedActivity : ComponentActivity() {
             HomeAccountingAppTheme {
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                var showOverdueMessage by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    borrowedViewModel.loadTransactions(application)
+                    if (borrowedViewModel.hasOverdueTransactions()) {
+                        delay(500)
+                        showOverdueMessage = true
+                        delay(3000)
+                        showOverdueMessage = false
+                    }
+                }
 
                 ModalNavigationDrawer(
                     drawerState = drawerState,
@@ -108,6 +126,30 @@ class BorrowedActivity : ComponentActivity() {
                                     .padding(innerPadding)
                             ) {
                                 BorrowedScreen(viewModel = borrowedViewModel)
+
+                                // Анімоване повідомлення про прострочені позичання
+                                AnimatedVisibility(
+                                    visible = showOverdueMessage,
+                                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(bottom = 100.dp) // збільшено значення відступу
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.9f) // встановлено ширину на 90% від ширини екрану
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(Color(0xFF800080).copy(alpha = 0.8f), Color.Transparent)
+                                                ),
+                                                shape = RoundedCornerShape(16.dp) // додано зглажені кути
+                                            )
+                                            .padding(16.dp)
+                                    ) {
+                                        Text("Ви прострочили погашення боргу", color = Color.White)
+                                    }
+                                }
                             }
                         }
                     )
@@ -443,7 +485,7 @@ class BorrowedViewModel(application: Application) : AndroidViewModel(application
         loadTransactions(application)
     }
 
-    private fun loadTransactions(context: Context) {
+    fun loadTransactions(context: Context) {
         val sharedPreferences = context.getSharedPreferences("BorrowedPrefs", Context.MODE_PRIVATE)
         val gson = Gson()
         val transactionsJson = sharedPreferences.getString("BorrowedTransactions", "[]")
@@ -479,6 +521,16 @@ class BorrowedViewModel(application: Application) : AndroidViewModel(application
         }
         saveTransactions(getApplication())
     }
+
+    fun hasOverdueTransactions(): Boolean {
+        val currentDate = Date()
+        return _transactions.value.any { it.dueDate.toDate().before(currentDate) }
+    }
+}
+
+fun String.toDate(): Date {
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    return formatter.parse(this) ?: Date()
 }
 
 class BorrowedViewModelFactory(
