@@ -20,6 +20,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
@@ -137,15 +138,16 @@ class TaskActivity : ComponentActivity() {
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(0.9f) // встановлено ширину на 90% від ширини екрану
                                             .background(
                                                 brush = Brush.verticalGradient(
-                                                    colors = listOf(Color.Yellow.copy(alpha = 0.8f), Color.Transparent)
-                                                )
+                                                    listOf(Color.Yellow.copy(alpha = 0.8f), Color.Transparent)
+                                                ),
+                                                shape = RoundedCornerShape(16.dp) // додано зглажені кути
                                             )
                                             .padding(16.dp)
                                     ) {
-                                        Text("У вас є невиконане завдання", color = Color.Black)
+                                        Text("У вас є невиконане завдання", color = Color.White)
                                     }
                                 }
                             }
