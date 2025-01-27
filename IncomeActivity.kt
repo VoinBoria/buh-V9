@@ -10,19 +10,12 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -273,11 +266,6 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
         sendUpdateBroadcast?.invoke()
     }
 
-    fun loadStandardCategories() {
-        categories = listOf("Зарплата", "Премія", "Подарунки", "Пасивний дохід")
-        saveCategories(categories)
-    }
-
     fun getStandardCategories(): List<String> {
         return listOf("Зарплата", "Премія", "Подарунки", "Пасивний дохід")
     }
@@ -298,14 +286,6 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun filterByPeriodForTransactions(startDate: LocalDate, endDate: LocalDate, categoryName: String? = null) {
-        _sortedTransactions.value = IncomeTransactions.filter {
-            val transactionDate = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
-            transactionDate in startDate..endDate && (categoryName == null || it.category == categoryName)
-        }.sortedByDescending { it.date }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     fun filterByPeriodForAllTransactions(startDate: LocalDate, endDate: LocalDate) {
         _sortedTransactions.value = IncomeTransactions.filter {
             val transactionDate = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
@@ -319,10 +299,6 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
             val transactionDate = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
             it.category == categoryName && transactionDate in startDate..endDate
         }.sortedByDescending { it.date }
-    }
-
-    fun getTotalIncomeForFilteredTransactions(): Double {
-        return _filteredTransactions.value.sumOf { it.amount }
     }
 
     fun filterByCategory(categoryName: String) {
