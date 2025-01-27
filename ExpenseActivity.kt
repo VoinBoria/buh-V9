@@ -912,7 +912,7 @@ fun AddTransactionDialog(
                 text = "Додати витрату",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.Red
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1009,8 +1009,8 @@ fun AddTransactionDialog(
                             )
                         },
                         onClick = {
+                            showAddCategoryDialog = true
                             isDropdownExpanded = false
-                            showAddCategoryDialog = true // Показ діалогу додавання категорії
                         }
                     )
                 }
@@ -1039,9 +1039,14 @@ fun AddTransactionDialog(
                 modifier = Modifier
                     .padding(top = 16.dp)
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
+                TextButton(
+                    onClick = onDismiss,
+                ) {
+                    Text("Скасувати", color = Color.Gray)
+                }
+                TextButton(
                     onClick = {
                         if (amount.isNotBlank() && selectedCategory.isNotBlank()) {
                             onSave(
@@ -1055,16 +1060,9 @@ fun AddTransactionDialog(
                             )
                             onDismiss()
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+                    }
                 ) {
                     Text("Зберегти", color = Color.White)
-                }
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Text("Скасувати", color = Color.White)
                 }
             }
         }
