@@ -39,14 +39,12 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.util.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.AndroidViewModel
@@ -241,12 +239,6 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     // Додайте цю функцію для відправки broadcast
     private fun sendUpdateBroadcast() {
         sendUpdateBroadcast?.invoke()
-    }
-
-    // Завантаження стандартних категорій
-    fun loadStandardCategories() {
-        categories = listOf("Аренда", "Комунальні послуги", "Транспорт", "Розваги", "Продукти", "Одяг", "Здоров'я", "Освіта", "Подарунки", "Хобі", "Благодійність", "Спорт", "Техніка")
-        saveCategories(categories)
     }
 
     // Отримання стандартних категорій
