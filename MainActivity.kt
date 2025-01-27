@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -29,6 +30,7 @@ import com.serhio.homeaccountingapp.ui.theme.HomeAccountingAppTheme
 import kotlinx.coroutines.launch
 import androidx.compose.ui.layout.ContentScale
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -64,6 +66,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var updateReceiver: BroadcastReceiver
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -106,6 +109,7 @@ class MainActivity : ComponentActivity() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(updateReceiver)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Composable
     fun MainContent() {
         MainScreen(
@@ -251,6 +255,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         Log.d("MainViewModel", "Expenses loaded: $expensesJson")
         _expenses.postValue(expenseMap)
     }
+    fun addIncomeCategory(newCategory: String) {
+        val currentCategories = _incomeCategories.value ?: emptyList()
+        if (newCategory !in currentCategories) {
+            val updatedCategories = currentCategories + newCategory
+            _incomeCategories.value = updatedCategories
+            saveCategories(sharedPreferencesIncome, updatedCategories)
+        }
+    }
 
     fun saveExpensesToSharedPreferences(expenses: Map<String, Double>) {
         val editor = sharedPreferencesExpense.edit()
@@ -330,6 +342,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _expenses.postValue(completeExpenses)
         saveExpensesToSharedPreferences(completeExpenses)
     }
+    fun addExpenseCategory(newCategory: String) {
+        val currentCategories = _expenseCategories.value ?: emptyList()
+        if (newCategory !in currentCategories) {
+            val updatedCategories = currentCategories + newCategory
+            _expenseCategories.value = updatedCategories
+            saveCategories(sharedPreferencesExpense, updatedCategories)
+        }
+    }
 
     fun refreshIncomes() {
         val transactionsJson = sharedPreferencesIncome.getString("IncomeTransactions", "[]") ?: "[]"
@@ -365,6 +385,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         loadStandardCategories()
     }
 }
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -693,10 +714,13 @@ fun MainScreen(
                         AddTransactionDialog(
                             categories = expenseCategories,
                             onDismiss = { showAddExpenseTransactionDialog = false },
-                            onSave = { transaction ->
+                            onSave = { transaction: Transaction -> // Явно вказуємо тип параметра
                                 viewModel.saveExpenseTransaction(context, transaction)
                                 viewModel.refreshExpenses()
                                 showAddExpenseTransactionDialog = false
+                            },
+                            onAddCategory = { newCategory ->
+                                viewModel.addExpenseCategory(newCategory) // Виклик методу для додавання нової категорії
                             }
                         )
                     }
@@ -709,7 +733,10 @@ fun MainScreen(
                                 viewModel.saveIncomeTransaction(context, incomeTransaction)
                                 viewModel.refreshIncomes()
                                 showAddIncomeTransactionDialog = false
-                            }
+                            },
+                            onAddCategory = { newCategory ->
+                                viewModel.addIncomeCategory(newCategory)
+                            } // Додано параметр onAddCategory
                         )
                     }
 
