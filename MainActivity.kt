@@ -1,6 +1,4 @@
 package com.serhio.homeaccountingapp;
-
-import android.R.id.list
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.BroadcastReceiver
