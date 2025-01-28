@@ -335,7 +335,11 @@ class IncomeViewModel(application: Application) : AndroidViewModel(application) 
     fun updateIncomeTransactions(newTransaction: IncomeTransaction) {
         viewModelScope.launch {
             val currentTransactions = loadIncomeTransactions().toMutableList()
-            currentTransactions.add(newTransaction)
+
+            // Convert date to the correct format
+            val formattedDate = DateUtils.formatDate(newTransaction.date, "dd/MM/yyyy", "yyyy-MM-dd")
+            currentTransactions.add(newTransaction.copy(date = formattedDate))
+
             IncomeTransactions = currentTransactions
             saveTransactionsToPreferences(currentTransactions)
             updateIncomes()
