@@ -52,16 +52,16 @@ fun IncomeExpenseChart(
     totalIncomes: Double,
     totalExpenses: Double
 ) {
-    val emptyChartColor = Color(0x8032CD32).copy(alpha = 0.5f)
-    val separatorColor = Color.DarkGray // Темніший колір розділової лінії
+    val emptyIncomeChartColor = Color(0x8032CD32).copy(alpha = 0.5f) // Прозоро зелений колір для доходів
+    val emptyExpenseChartColor = Color(0x80FF0000).copy(alpha = 0.5f) // Прозоро червоний колір для витрат
+    val separatorColor = Color.DarkGray
 
     BoxWithConstraints {
         val screenWidth = maxWidth
         val isSmallScreen = screenWidth < 360.dp
-        val chartSize = if (isSmallScreen) 100.dp else 178.dp  // Зменшення розміру діаграми для маленьких екранів
-        val strokeWidth = if (isSmallScreen) 16f else 50f  // Зменшення товщини обводки для маленьких екранів
-        val maxLegendHeight = chartSize  // Висота легенди тепер дорівнює висоті діаграми
-        val padding = if (isSmallScreen) 8.dp else 16.dp  // Зменшення відступів для маленьких екранів
+        val chartSize = if (isSmallScreen) 100.dp else 176.dp
+        val strokeWidth = if (isSmallScreen) 16f else 50f
+        val padding = if (isSmallScreen) 8.dp else 16.dp
 
         val scope = rememberCoroutineScope()
 
@@ -70,7 +70,7 @@ fun IncomeExpenseChart(
             verticalArrangement = Arrangement.Top,
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (!isSmallScreen) Modifier.widthIn(max = 400.dp) else Modifier) // Обмеження ширини контейнера
+                .then(if (!isSmallScreen) Modifier.widthIn(max = 400.dp) else Modifier)
         ) {
             val incomeColors = generateDistinctColors(incomes.size.takeIf { it > 0 } ?: 1, excludeRed = true)
             val expenseColors = generateDistinctColors(expenses.size.takeIf { it > 0 } ?: 1, excludeGreen = true)
@@ -116,8 +116,8 @@ fun IncomeExpenseChart(
                             LegendColumn(
                                 items = incomes.keys.toList(),
                                 colors = incomeColors,
-                                maxHeight = maxLegendHeight,
-                                modifier = Modifier.padding(end = padding) // Зміщення вправо
+                                maxHeight = chartSize,
+                                modifier = Modifier.padding(end = padding)
                             )
                             GradientDonutChart(
                                 values = incomes.values.toList(),
@@ -125,16 +125,16 @@ fun IncomeExpenseChart(
                                 chartSize = chartSize,
                                 colors = incomeColors,
                                 strokeWidth = strokeWidth,
-                                emptyChartColor = emptyChartColor,
-                                separatorColor = separatorColor, // Передаємо темний колір розділової лінії
-                                modifier = Modifier.padding(start = padding) // Зміщення вліво
+                                emptyChartColor = emptyIncomeChartColor, // Передаємо прозоро зелений колір
+                                separatorColor = separatorColor,
+                                modifier = Modifier.padding(start = padding)
                             )
                         } else {
                             LegendColumn(
                                 items = expenses.keys.toList(),
                                 colors = expenseColors,
-                                maxHeight = maxLegendHeight,
-                                modifier = Modifier.padding(end = padding) // Зміщення вправо
+                                maxHeight = chartSize,
+                                modifier = Modifier.padding(end = padding)
                             )
                             GradientDonutChart(
                                 values = expenses.values.toList(),
@@ -142,9 +142,9 @@ fun IncomeExpenseChart(
                                 chartSize = chartSize,
                                 colors = expenseColors,
                                 strokeWidth = strokeWidth,
-                                emptyChartColor = emptyChartColor,
-                                separatorColor = separatorColor, // Передаємо темний колір розділової лінії
-                                modifier = Modifier.padding(start = padding) // Зміщення вліво
+                                emptyChartColor = emptyExpenseChartColor, // Передаємо прозоро червоний колір
+                                separatorColor = separatorColor,
+                                modifier = Modifier.padding(start = padding)
                             )
                         }
                     }
@@ -162,6 +162,7 @@ fun IncomeExpenseChart(
         }
     }
 }
+
 @Composable
 fun LegendColumn(
     items: List<String>,
@@ -178,7 +179,7 @@ fun LegendColumn(
         items.forEachIndexed { index, category ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 4.dp)  // Додавання відступів
+                modifier = Modifier.padding(vertical = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -192,9 +193,10 @@ fun LegendColumn(
                 Text(
                     text = category,
                     color = Color.White,
-                    fontSize = 14.sp,  // Збільшення шрифту
-                    maxLines = 2, // Забезпечує, що текст не обрізається по слову
-                    overflow = TextOverflow.Ellipsis // Додаємо трикрапку в кінці довгих слів
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    softWrap = true, // Додаємо параметр для переносу тексту
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
