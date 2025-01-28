@@ -345,7 +345,11 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     fun addTransaction(newTransaction: Transaction) {
         viewModelScope.launch {
             val currentTransactions = loadTransactions().toMutableList()
-            currentTransactions.add(newTransaction)
+
+            // Convert date to the correct format
+            val formattedDate = DateUtils.formatDate(newTransaction.date, "dd/MM/yyyy", "yyyy-MM-dd")
+            currentTransactions.add(newTransaction.copy(date = formattedDate))
+
             _transactions.value = currentTransactions
             saveTransactions(currentTransactions)
             updateExpenses()
