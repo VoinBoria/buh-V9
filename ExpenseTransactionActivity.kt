@@ -49,6 +49,7 @@ import java.util.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 class ExpenseTransactionActivity : ComponentActivity() {
     private val viewModel: ExpenseViewModel by viewModels { ExpenseViewModelFactory(application) }
@@ -701,7 +702,7 @@ fun EditTransactionDialog(
                     val amountValue = updatedAmount.toDoubleOrNull()
                     if (amountValue != null) {
                         // Переконайтеся, що сума завжди негативна
-                        onSave(transaction.copy(amount = -amountValue, date = updatedDate, comments = updatedComment)) // Ensure the amount is negative
+                        onSave(transaction.copy(amount = -abs(amountValue), date = updatedDate, comments = updatedComment)) // Ensure the amount is negative
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
