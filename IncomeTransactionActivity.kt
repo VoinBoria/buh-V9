@@ -630,6 +630,7 @@ fun CategoryDropdownMenu(
                 .width(200.dp) // Встановлюємо фіксовану ширину для випадаючого меню
                 .background(Color.Gray.copy(alpha = 0.8f)) // Сірий прозорий фон
                 .border(1.dp, Color.White, RoundedCornerShape(8.dp)) // Рамка з білим кольором і закругленими кутами
+                .heightIn(max = 200.dp) // Обмежуємо висоту випадаючого меню
         ) {
             categories.forEach { category ->
                 DropdownMenuItem(
