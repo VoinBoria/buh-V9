@@ -1002,8 +1002,8 @@ fun IncomeAddIncomeTransactionDialog(
                             )
                         },
                         onClick = {
-                            showAddCategoryDialog = true
                             isDropdownExpanded = false
+                            showAddCategoryDialog = true // Показуємо діалог додавання категорії
                         }
                     )
                 }
@@ -1015,6 +1015,7 @@ fun IncomeAddIncomeTransactionDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
+                singleLine = true,
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.Gray,
@@ -1026,37 +1027,45 @@ fun IncomeAddIncomeTransactionDialog(
                     unfocusedTextColor = Color.White
                 ),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White, fontWeight = FontWeight.Bold),
-                singleLine = true
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Text
+                )
             )
-            Row(
+            Button(
+                onClick = {
+                    val incomeTransaction = IncomeTransaction(
+                        id = UUID.randomUUID().toString(),
+                        amount = amount.toDoubleOrNull() ?: 0.0,
+                        date = date,
+                        category = selectedCategory,
+                        comments = comment.takeIf { it.isNotBlank() } // Використання takeIf для comments
+                    )
+                    onSave(incomeTransaction)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
             ) {
-                TextButton(
-                    onClick = onDismiss,
-                ) {
-                    Text("Скасувати", color = Color.Gray)
-                }
-                TextButton(
-                    onClick = {
-                        onSave(
-                            IncomeTransaction(
-                                id = UUID.randomUUID().toString(),
-                                amount = amount.toDoubleOrNull() ?: 0.0,
-                                date = date,
-                                category = selectedCategory,
-                                comments = comment.takeIf { it.isNotBlank() } // Використання takeIf для comments
-                            )
-                        )
-                        onDismiss()
-                    }
-                ) {
-                    Text("Зберегти", color = Color.White)
-                }
+                Text(
+                    text = "Зберегти",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                )
             }
         }
+    }
+
+    // Показ діалогу додавання категорії
+    if (showAddCategoryDialog) {
+        IncomeAddCategoryDialog(
+            onDismiss = { showAddCategoryDialog = false },
+            onSave = { newCategory ->
+                onAddCategory(newCategory)
+                selectedCategory = newCategory
+                showAddCategoryDialog = false
+            }
+        )
     }
 }
 data class IncomeTransaction(
