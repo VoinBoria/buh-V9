@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -356,7 +357,8 @@ fun IncomeTransactionScreen(
                     showEditDialog = false
                     val updateIntent = Intent("com.example.homeaccountingapp.UPDATE_INCOME")
                     LocalBroadcastManager.getInstance(context).sendBroadcast(updateIntent)
-                }
+                },
+                categories = viewModel.categories // Передаємо список категорій
             )
         }
         FloatingActionButton(
@@ -604,14 +606,56 @@ fun IncomeEditDeleteDialog(
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun CategoryDropdownMenu(
+    categories: List<String>,
+    selectedCategory: String,
+    onCategorySelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp), // Зменшуємо висоту кнопки
+            border = BorderStroke(1.dp, Color.Gray)
+        ) {
+            Text(text = "Категорія: $selectedCategory", style = TextStyle(color = Color.White))
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .width(200.dp) // Встановлюємо фіксовану ширину для випадаючого меню
+                .background(Color.Gray.copy(alpha = 0.8f)) // Сірий прозорий фон
+                .border(1.dp, Color.White, RoundedCornerShape(8.dp)) // Рамка з білим кольором і закругленими кутами
+        ) {
+            categories.forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(text = category, style = TextStyle(color = Color.White, fontWeight = FontWeight.Bold)) }, // Зробимо текст білим і жирним
+                    onClick = {
+                        onCategorySelected(category)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun IncomeEditTransactionDialog(
     transaction: IncomeTransaction,
     onDismiss: () -> Unit,
-    onSave: (IncomeTransaction) -> Unit
+    onSave: (IncomeTransaction) -> Unit,
+    categories: List<String> // Додано список категорій
 ) {
     var updatedAmount by remember { mutableStateOf(transaction.amount.toString()) }
     var updatedDate by remember { mutableStateOf(transaction.date) }
     var updatedComment by remember { mutableStateOf(transaction.comments ?: "") }
+    var updatedCategory by remember { mutableStateOf(transaction.category) } // Додано змінну для категорії
     val datePickerState = remember { mutableStateOf(false) }
 
     if (datePickerState.value) {
@@ -672,6 +716,13 @@ fun IncomeEditTransactionDialog(
                         containerColor = Color.Transparent
                     )
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                // Додаємо випадаючий список для вибору категорії
+                CategoryDropdownMenu(
+                    categories = categories,
+                    selectedCategory = updatedCategory,
+                    onCategorySelected = { updatedCategory = it }
+                )
             }
         },
         confirmButton = {
@@ -679,7 +730,7 @@ fun IncomeEditTransactionDialog(
                 onClick = {
                     val amountValue = updatedAmount.toDoubleOrNull()
                     if (amountValue != null) {
-                        onSave(transaction.copy(amount = amountValue, date = updatedDate, comments = updatedComment))
+                        onSave(transaction.copy(amount = amountValue, date = updatedDate, comments = updatedComment, category = updatedCategory))
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C), contentColor = Color.White),
