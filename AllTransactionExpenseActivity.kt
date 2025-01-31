@@ -382,7 +382,8 @@ fun AllTransactionExpenseScreen(
                     onSave = { updatedTransaction ->
                         viewModel.updateTransaction(updatedTransaction)
                         showEditDialog = false
-                    }
+                    },
+                    categories = viewModel.categories // Передаємо список категорій
                 )
             }
         }
