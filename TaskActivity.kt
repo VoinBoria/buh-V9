@@ -241,7 +241,7 @@ fun TaskScreen(viewModel: TaskViewModel) {
                 onClick = { showAddTaskDialog = true },
                 containerColor = Color(0xFF228B22),
 
-            ) {
+                ) {
                 Text("+", color = Color.White, style = MaterialTheme.typography.bodyLarge)
             }
         },
