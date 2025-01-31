@@ -398,7 +398,8 @@ fun AllTransactionIncomeScreen(
                     onSave = { updatedTransaction ->
                         onUpdateTransaction(updatedTransaction) // Виклик onUpdateTransaction
                         showEditDialog = false
-                    }
+                    },
+                    categories = viewModel.categories // Передаємо список категорій
                 )
             }
         }
