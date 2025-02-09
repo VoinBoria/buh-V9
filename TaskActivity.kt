@@ -17,6 +17,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -180,6 +181,14 @@ class TaskViewModel(
         saveTasks()
     }
 
+    fun updateTask(updatedTask: Task) {
+        val index = _tasks.indexOfFirst { it.id == updatedTask.id }
+        if (index != -1) {
+            _tasks[index] = updatedTask
+            saveTasks()
+        }
+    }
+
     fun removeTask(task: Task) {
         _tasks.remove(task)
         saveTasks()
@@ -234,6 +243,7 @@ class TaskViewModelFactory(
 fun TaskScreen(viewModel: TaskViewModel) {
     val context = LocalContext.current
     var showAddTaskDialog by remember { mutableStateOf(false) }
+    var editingTask by remember { mutableStateOf<Task?>(null) } // Add this state for editing task
 
     Scaffold(
         floatingActionButton = {
@@ -262,16 +272,28 @@ fun TaskScreen(viewModel: TaskViewModel) {
                         .padding(bottom = 72.dp), // Нижній відступ для кнопки "+", щоб уникнути перекриття
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    TaskList(viewModel.tasks, viewModel::toggleTaskCompletion, viewModel::removeTask)
+                    TaskList(viewModel.tasks, viewModel::toggleTaskCompletion, viewModel::removeTask, onEditTask = { task ->
+                        editingTask = task
+                        showAddTaskDialog = true
+                    })
                 }
 
                 if (showAddTaskDialog) {
                     AddTaskDialog(
-                        onDismiss = { showAddTaskDialog = false },
-                        onSave = { task ->
-                            viewModel.addTask(task)
+                        taskToEdit = editingTask,
+                        onDismiss = {
                             showAddTaskDialog = false
-                            Toast.makeText(context, "Задача додана", Toast.LENGTH_SHORT).show()
+                            editingTask = null
+                        },
+                        onSave = { task ->
+                            if (editingTask != null) {
+                                viewModel.updateTask(task) // Update the task
+                            } else {
+                                viewModel.addTask(task)
+                            }
+                            showAddTaskDialog = false
+                            editingTask = null
+                            Toast.makeText(context, "Задача збережена", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -283,11 +305,12 @@ fun TaskScreen(viewModel: TaskViewModel) {
 fun TaskList(
     tasks: List<Task>,
     onToggleCompletion: (Task) -> Unit,
-    onDeleteTask: (Task) -> Unit
+    onDeleteTask: (Task) -> Unit,
+    onEditTask: (Task) -> Unit // Add this parameter for editing a task
 ) {
     LazyColumn {
         items(tasks) { task ->
-            TaskItem(task, onToggleCompletion, onDeleteTask)
+            TaskItem(task, onToggleCompletion, onDeleteTask, onEditTask) // Pass the onEditTask callback
         }
     }
 }
@@ -296,14 +319,16 @@ fun TaskList(
 fun TaskItem(
     task: Task,
     onToggleCompletion: (Task) -> Unit,
-    onDeleteTask: (Task) -> Unit
+    onDeleteTask: (Task) -> Unit,
+    onEditTask: (Task) -> Unit // Add this parameter for editing a task
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .background(Color(0xFF1E1E1E).copy(alpha = 0.8f)) // Яскравіше, але прозоре
-            .padding(16.dp),
+            .padding(16.dp)
+            .clickable { onEditTask(task) }, // Add clickable modifier to trigger edit
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -354,13 +379,14 @@ fun TaskItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
+    taskToEdit: Task? = null, // Add this parameter to prefill fields when editing
     onDismiss: () -> Unit,
     onSave: (Task) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var startDate by remember { mutableStateOf(Date()) }
-    var endDate by remember { mutableStateOf(Date()) }
+    var title by remember { mutableStateOf(taskToEdit?.title ?: "") }
+    var description by remember { mutableStateOf(taskToEdit?.description ?: "") }
+    var startDate by remember { mutableStateOf(taskToEdit?.startDate ?: Date()) }
+    var endDate by remember { mutableStateOf(taskToEdit?.endDate ?: Date()) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
@@ -399,7 +425,7 @@ fun AddTaskDialog(
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
-            Text("Додати задачу", color = Color.White)
+            Text(if (taskToEdit == null) "Додати задачу" else "Редагувати задачу", color = Color.White)
         },
         text = {
             Column {
@@ -466,7 +492,7 @@ fun AddTaskDialog(
             Button(
                 onClick = {
                     if (title.isNotEmpty()) {
-                        onSave(Task(UUID.randomUUID().toString(), title, description.ifEmpty { null }, startDate, endDate))
+                        onSave(Task(taskToEdit?.id ?: UUID.randomUUID().toString(), title, description.ifEmpty { null }, startDate, endDate))
                     } else {
                         // Show error message
                     }
