@@ -1,6 +1,7 @@
 package com.serhio.homeaccountingapp;
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -166,7 +167,8 @@ data class Task(
     val description: String?,
     val startDate: Date,
     val endDate: Date,
-    var isCompleted: Boolean = false
+    var isCompleted: Boolean = false,
+    var reminder: String? = null // New field for reminder
 )
 
 class TaskViewModel(
@@ -351,11 +353,11 @@ fun TaskItem(
                 )
             }
             Text(
-                text = "Початок: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(task.startDate)}",
+                text = "Початок: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.startDate)}",
                 style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
             )
             Text(
-                text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(task.endDate)}",
+                text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.endDate)}",
                 style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
             )
             if (task.isCompleted) {
@@ -386,9 +388,15 @@ fun AddTaskDialog(
     var title by remember { mutableStateOf(taskToEdit?.title ?: "") }
     var description by remember { mutableStateOf(taskToEdit?.description ?: "") }
     var startDate by remember { mutableStateOf(taskToEdit?.startDate ?: Date()) }
+    var startTime by remember { mutableStateOf(taskToEdit?.startDate ?: Date()) }
     var endDate by remember { mutableStateOf(taskToEdit?.endDate ?: Date()) }
+    var endTime by remember { mutableStateOf(taskToEdit?.endDate ?: Date()) }
+    var reminder by remember { mutableStateOf(taskToEdit?.reminder ?: "За 10 хвилин") }
     var showStartDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+    var showReminderMenu by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -400,10 +408,28 @@ fun AddTaskDialog(
                     set(year, month, dayOfMonth)
                 }.time
                 showStartDatePicker = false
+                showStartTimePicker = true
             },
             startDate.year + 1900,
             startDate.month,
             startDate.date
+        ).show()
+    }
+
+    if (showStartTimePicker) {
+        TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                startTime = Calendar.getInstance().apply {
+                    time = startDate
+                    set(Calendar.HOUR_OF_DAY, hourOfDay)
+                    set(Calendar.MINUTE, minute)
+                }.time
+                showStartTimePicker = false
+            },
+            startTime.hours,
+            startTime.minutes,
+            true
         ).show()
     }
 
@@ -415,10 +441,28 @@ fun AddTaskDialog(
                     set(year, month, dayOfMonth)
                 }.time
                 showEndDatePicker = false
+                showEndTimePicker = true
             },
             endDate.year + 1900,
             endDate.month,
             endDate.date
+        ).show()
+    }
+
+    if (showEndTimePicker) {
+        TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                endTime = Calendar.getInstance().apply {
+                    time = endDate
+                    set(Calendar.HOUR_OF_DAY, hourOfDay)
+                    set(Calendar.MINUTE, minute)
+                }.time
+                showEndTimePicker = false
+            },
+            endTime.hours,
+            endTime.minutes,
+            true
         ).show()
     }
 
@@ -458,32 +502,99 @@ fun AddTaskDialog(
                         cursorColor = Color.White,
                         containerColor = Color.Transparent
                     ),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp), // Збільшено висоту для багато символів
                     singleLine = false,
-                    maxLines = 3
+                    maxLines = 10 // Збільшено максимальну кількість рядків
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = { showStartDatePicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF616161))
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(BorderStroke(1.dp, Color(0xFF4CAF50)), shape = RoundedCornerShape(8.dp)), // Стиль кнопки вибору дати
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                 ) {
                     Text(
-                        text = "Початок: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(startDate)}",
-                        color = Color.White,
+                        text = "Початок: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(startTime)}",
+                        color = Color(0xFF4CAF50),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = { showEndDatePicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF616161))
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(BorderStroke(1.dp, Color(0xFF4CAF50)), shape = RoundedCornerShape(8.dp)), // Стиль кнопки вибору дати
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                 ) {
                     Text(
-                        text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate)}",
-                        color = Color.White,
+                        text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(endTime)}",
+                        color = Color(0xFF4CAF50),
                         style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { showReminderMenu = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(BorderStroke(1.dp, Color.Yellow), shape = RoundedCornerShape(8.dp)), // Стиль кнопки нагадування
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                ) {
+                    Text(
+                        text = "Нагадування: $reminder",
+                        color = Color.Yellow,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                DropdownMenu(
+                    expanded = showReminderMenu,
+                    onDismissRequest = { showReminderMenu = false },
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(Color.Black.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.4f))
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            reminder = "За 10 хвилин"
+                            showReminderMenu = false
+                        },
+                        text = { Text("За 10 хвилин", color = Color.White) }
+                    )
+                    DropdownMenuItem(
+                        onClick = {
+                            reminder = "За пів години"
+                            showReminderMenu = false
+                        },
+                        text = { Text("За пів години", color = Color.White) }
+                    )
+                    DropdownMenuItem(
+                        onClick = {
+                            reminder = "За годину"
+                            showReminderMenu = false
+                        },
+                        text = { Text("За годину", color = Color.White) }
+                    )
+                    DropdownMenuItem(
+                        onClick = {
+                            reminder = "За день"
+                            showReminderMenu = false
+                        },
+                        text = { Text("За день", color = Color.White) }
+                    )
+                    DropdownMenuItem(
+                        onClick = {
+                            reminder = "За тиждень"
+                            showReminderMenu = false
+                        },
+                        text = { Text("За тиждень", color = Color.White) }
                     )
                 }
             }
@@ -492,7 +603,16 @@ fun AddTaskDialog(
             Button(
                 onClick = {
                     if (title.isNotEmpty()) {
-                        onSave(Task(taskToEdit?.id ?: UUID.randomUUID().toString(), title, description.ifEmpty { null }, startDate, endDate))
+                        onSave(
+                            Task(
+                                taskToEdit?.id ?: UUID.randomUUID().toString(),
+                                title,
+                                description.ifEmpty { null },
+                                startTime,
+                                endTime,
+                                reminder = reminder
+                            )
+                        )
                     } else {
                         // Show error message
                     }
