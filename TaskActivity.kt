@@ -1,7 +1,6 @@
 package com.serhio.homeaccountingapp;
 
 import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -18,7 +17,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -167,8 +165,7 @@ data class Task(
     val description: String?,
     val startDate: Date,
     val endDate: Date,
-    var isCompleted: Boolean = false,
-    var reminder: String? = null // New field for reminder
+    var isCompleted: Boolean = false
 )
 
 class TaskViewModel(
@@ -181,14 +178,6 @@ class TaskViewModel(
     fun addTask(task: Task) {
         _tasks.add(task)
         saveTasks()
-    }
-
-    fun updateTask(updatedTask: Task) {
-        val index = _tasks.indexOfFirst { it.id == updatedTask.id }
-        if (index != -1) {
-            _tasks[index] = updatedTask
-            saveTasks()
-        }
     }
 
     fun removeTask(task: Task) {
@@ -245,7 +234,6 @@ class TaskViewModelFactory(
 fun TaskScreen(viewModel: TaskViewModel) {
     val context = LocalContext.current
     var showAddTaskDialog by remember { mutableStateOf(false) }
-    var editingTask by remember { mutableStateOf<Task?>(null) } // Add this state for editing task
 
     Scaffold(
         floatingActionButton = {
@@ -274,28 +262,16 @@ fun TaskScreen(viewModel: TaskViewModel) {
                         .padding(bottom = 72.dp), // Нижній відступ для кнопки "+", щоб уникнути перекриття
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    TaskList(viewModel.tasks, viewModel::toggleTaskCompletion, viewModel::removeTask, onEditTask = { task ->
-                        editingTask = task
-                        showAddTaskDialog = true
-                    })
+                    TaskList(viewModel.tasks, viewModel::toggleTaskCompletion, viewModel::removeTask)
                 }
 
                 if (showAddTaskDialog) {
                     AddTaskDialog(
-                        taskToEdit = editingTask,
-                        onDismiss = {
-                            showAddTaskDialog = false
-                            editingTask = null
-                        },
+                        onDismiss = { showAddTaskDialog = false },
                         onSave = { task ->
-                            if (editingTask != null) {
-                                viewModel.updateTask(task) // Update the task
-                            } else {
-                                viewModel.addTask(task)
-                            }
+                            viewModel.addTask(task)
                             showAddTaskDialog = false
-                            editingTask = null
-                            Toast.makeText(context, "Задача збережена", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Задача додана", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -307,12 +283,11 @@ fun TaskScreen(viewModel: TaskViewModel) {
 fun TaskList(
     tasks: List<Task>,
     onToggleCompletion: (Task) -> Unit,
-    onDeleteTask: (Task) -> Unit,
-    onEditTask: (Task) -> Unit // Add this parameter for editing a task
+    onDeleteTask: (Task) -> Unit
 ) {
     LazyColumn {
         items(tasks) { task ->
-            TaskItem(task, onToggleCompletion, onDeleteTask, onEditTask) // Pass the onEditTask callback
+            TaskItem(task, onToggleCompletion, onDeleteTask)
         }
     }
 }
@@ -321,16 +296,14 @@ fun TaskList(
 fun TaskItem(
     task: Task,
     onToggleCompletion: (Task) -> Unit,
-    onDeleteTask: (Task) -> Unit,
-    onEditTask: (Task) -> Unit // Add this parameter for editing a task
+    onDeleteTask: (Task) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .background(Color(0xFF1E1E1E).copy(alpha = 0.8f)) // Яскравіше, але прозоре
-            .padding(16.dp)
-            .clickable { onEditTask(task) }, // Add clickable modifier to trigger edit
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -353,11 +326,11 @@ fun TaskItem(
                 )
             }
             Text(
-                text = "Початок: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.startDate)}",
+                text = "Початок: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(task.startDate)}",
                 style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
             )
             Text(
-                text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(task.endDate)}",
+                text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(task.endDate)}",
                 style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
             )
             if (task.isCompleted) {
@@ -381,22 +354,15 @@ fun TaskItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
-    taskToEdit: Task? = null, // Add this parameter to prefill fields when editing
     onDismiss: () -> Unit,
     onSave: (Task) -> Unit
 ) {
-    var title by remember { mutableStateOf(taskToEdit?.title ?: "") }
-    var description by remember { mutableStateOf(taskToEdit?.description ?: "") }
-    var startDate by remember { mutableStateOf(taskToEdit?.startDate ?: Date()) }
-    var startTime by remember { mutableStateOf(taskToEdit?.startDate ?: Date()) }
-    var endDate by remember { mutableStateOf(taskToEdit?.endDate ?: Date()) }
-    var endTime by remember { mutableStateOf(taskToEdit?.endDate ?: Date()) }
-    var reminder by remember { mutableStateOf(taskToEdit?.reminder ?: "За 10 хвилин") }
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var startDate by remember { mutableStateOf(Date()) }
+    var endDate by remember { mutableStateOf(Date()) }
     var showStartDatePicker by remember { mutableStateOf(false) }
-    var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
-    var showEndTimePicker by remember { mutableStateOf(false) }
-    var showReminderMenu by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -408,28 +374,10 @@ fun AddTaskDialog(
                     set(year, month, dayOfMonth)
                 }.time
                 showStartDatePicker = false
-                showStartTimePicker = true
             },
             startDate.year + 1900,
             startDate.month,
             startDate.date
-        ).show()
-    }
-
-    if (showStartTimePicker) {
-        TimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                startTime = Calendar.getInstance().apply {
-                    time = startDate
-                    set(Calendar.HOUR_OF_DAY, hourOfDay)
-                    set(Calendar.MINUTE, minute)
-                }.time
-                showStartTimePicker = false
-            },
-            startTime.hours,
-            startTime.minutes,
-            true
         ).show()
     }
 
@@ -441,7 +389,6 @@ fun AddTaskDialog(
                     set(year, month, dayOfMonth)
                 }.time
                 showEndDatePicker = false
-                showEndTimePicker = true
             },
             endDate.year + 1900,
             endDate.month,
@@ -449,27 +396,10 @@ fun AddTaskDialog(
         ).show()
     }
 
-    if (showEndTimePicker) {
-        TimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                endTime = Calendar.getInstance().apply {
-                    time = endDate
-                    set(Calendar.HOUR_OF_DAY, hourOfDay)
-                    set(Calendar.MINUTE, minute)
-                }.time
-                showEndTimePicker = false
-            },
-            endTime.hours,
-            endTime.minutes,
-            true
-        ).show()
-    }
-
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
-            Text(if (taskToEdit == null) "Додати задачу" else "Редагувати задачу", color = Color.White)
+            Text("Додати задачу", color = Color.White)
         },
         text = {
             Column {
@@ -502,99 +432,32 @@ fun AddTaskDialog(
                         cursorColor = Color.White,
                         containerColor = Color.Transparent
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp), // Збільшено висоту для багато символів
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = false,
-                    maxLines = 10 // Збільшено максимальну кількість рядків
+                    maxLines = 3
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = { showStartDatePicker = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(BorderStroke(1.dp, Color(0xFF4CAF50)), shape = RoundedCornerShape(8.dp)), // Стиль кнопки вибору дати
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF616161))
                 ) {
                     Text(
-                        text = "Початок: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(startTime)}",
-                        color = Color(0xFF4CAF50),
+                        text = "Початок: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(startDate)}",
+                        color = Color.White,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = { showEndDatePicker = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(BorderStroke(1.dp, Color(0xFF4CAF50)), shape = RoundedCornerShape(8.dp)), // Стиль кнопки вибору дати
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF616161))
                 ) {
                     Text(
-                        text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(endTime)}",
-                        color = Color(0xFF4CAF50),
+                        text = "Кінець: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(endDate)}",
+                        color = Color.White,
                         style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { showReminderMenu = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(BorderStroke(1.dp, Color.Yellow), shape = RoundedCornerShape(8.dp)), // Стиль кнопки нагадування
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-                ) {
-                    Text(
-                        text = "Нагадування: $reminder",
-                        color = Color.Yellow,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                DropdownMenu(
-                    expanded = showReminderMenu,
-                    onDismissRequest = { showReminderMenu = false },
-                    modifier = Modifier
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Black.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.4f))
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                ) {
-                    DropdownMenuItem(
-                        onClick = {
-                            reminder = "За 10 хвилин"
-                            showReminderMenu = false
-                        },
-                        text = { Text("За 10 хвилин", color = Color.White) }
-                    )
-                    DropdownMenuItem(
-                        onClick = {
-                            reminder = "За пів години"
-                            showReminderMenu = false
-                        },
-                        text = { Text("За пів години", color = Color.White) }
-                    )
-                    DropdownMenuItem(
-                        onClick = {
-                            reminder = "За годину"
-                            showReminderMenu = false
-                        },
-                        text = { Text("За годину", color = Color.White) }
-                    )
-                    DropdownMenuItem(
-                        onClick = {
-                            reminder = "За день"
-                            showReminderMenu = false
-                        },
-                        text = { Text("За день", color = Color.White) }
-                    )
-                    DropdownMenuItem(
-                        onClick = {
-                            reminder = "За тиждень"
-                            showReminderMenu = false
-                        },
-                        text = { Text("За тиждень", color = Color.White) }
                     )
                 }
             }
@@ -603,16 +466,7 @@ fun AddTaskDialog(
             Button(
                 onClick = {
                     if (title.isNotEmpty()) {
-                        onSave(
-                            Task(
-                                taskToEdit?.id ?: UUID.randomUUID().toString(),
-                                title,
-                                description.ifEmpty { null },
-                                startTime,
-                                endTime,
-                                reminder = reminder
-                            )
-                        )
+                        onSave(Task(UUID.randomUUID().toString(), title, description.ifEmpty { null }, startDate, endDate))
                     } else {
                         // Show error message
                     }
